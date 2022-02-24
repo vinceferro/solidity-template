@@ -6,6 +6,8 @@ import type { Greeter } from "../../src/types/Greeter";
 import { Signers } from "../types";
 import { shouldBehaveLikeGreeter } from "./Greeter.behavior";
 
+const BigNumber = ethers.BigNumber;
+
 describe("Unit tests", function () {
   before(async function () {
     this.signers = {} as Signers;

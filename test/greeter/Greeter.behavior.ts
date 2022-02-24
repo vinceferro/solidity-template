@@ -1,4 +1,6 @@
 import { expect } from "chai";
+import { ethers } from "hardhat";
+const BigNumber = ethers.BigNumber;
 
 export function shouldBehaveLikeGreeter(): void {
   it("should return the new greeting once it's changed", async function () {

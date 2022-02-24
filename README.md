@@ -1,114 +1,36 @@
-# Solidity Template
+# Crowdfundr
 
-My favorite setup for writing Solidity smart contracts.
+Build a smart contract that allows creators to register their projects. Other people can contribute ETH to that project. Once the goal has been met, the creators can withdraw the funds. When someone contributes 1 ETH, they receive a contributor badge NFT, which is tradable.
 
-- [Hardhat](https://github.com/nomiclabs/hardhat): compile and run the smart contracts on a local development network
-- [TypeChain](https://github.com/ethereum-ts/TypeChain): generate TypeScript types for smart contracts
-- [Ethers](https://github.com/ethers-io/ethers.js/): renowned Ethereum library and wallet implementation
-- [Waffle](https://github.com/EthWorks/Waffle): tooling for writing comprehensive smart contract tests
-- [Solhint](https://github.com/protofire/solhint): linter
-- [Solcover](https://github.com/sc-forks/solidity-coverage): code coverage
-- [Prettier Plugin Solidity](https://github.com/prettier-solidity/prettier-plugin-solidity): code formatter
+# Spec
 
-This is a GitHub template, which means you can reuse it as many times as you want. You can do that by clicking the "Use this
-template" button at the top of the page.
+- The smart contract is reusable; multiple projects can be registered and accept ETH concurrently.
+  - Specifically, you should use the factory contract pattern.
+- The goal is a preset amount of ETH.
+  - This cannot be changed after a project gets created.
+- Regarding contributing:
+  - The contribute amount must be at least 0.01 ETH.
+  - There is no upper limit.
+  - Anyone can contribute to the project, including the creator.
+  - One address can contribute as many times as they like.
+  - No one can withdraw their funds until the project either fails or gets cancelled.
+- Regarding contributer badges:
+  - An address receives a badge if their **total contribution** is at least 1 ETH.
+  - One address can receive multiple badges, but should only receive 1 badge per 1 ETH.
+- If the project is not fully funded within 30 days:
+  - The project goal is considered to have failed.
+  - No one can contribute anymore.
+  - Supporters get their money back.
+  - Contributor badges are left alone. They should still be tradable.
+- Once a project becomes fully funded:
+  - No one else can contribute (however, the last contribution can go over the goal).
+  - The creator can withdraw any amount of contributed funds.
+- The creator can choose to cancel their project before the 30 days are over, which has the same effect as a project failing.
 
-## Usage
+# Design exercise
 
-### Pre Requisites
+Smart contracts have a hard limit of 24kb. Crowdfundr hands out an NFT to everyone who contributes. However, consider how Kickstarter has multiple contribution tiers. How would you design your contract to support this, without creating three separate NFT contracts?
 
-Before running any command, you need to create a `.env` file and set a BIP-39 compatible mnemonic as an environment
-variable. Follow the example in `.env.example`. If you don't already have a mnemonic, use this [website](https://iancoleman.io/bip39/) to generate one.
+Considering that smart contracts are bundled together and then deployed as a single contract, I would design a contract interface that allow the main contract to interact with standardized external nft contracts thru such defined interface. The main contract would have a simple mapping between an integer value representing the ETH threshold and a nft contract address, so it would be called to mint the nft dynamically. The mapping could be dinamically updated to introduce new tiers easily, or to update contract destinations for the same threshold.
 
-Then, proceed with installing dependencies:
-
-```sh
-yarn install
-```
-
-### Compile
-
-Compile the smart contracts with Hardhat:
-
-```sh
-$ yarn compile
-```
-
-### TypeChain
-
-Compile the smart contracts and generate TypeChain artifacts:
-
-```sh
-$ yarn typechain
-```
-
-### Lint Solidity
-
-Lint the Solidity code:
-
-```sh
-$ yarn lint:sol
-```
-
-### Lint TypeScript
-
-Lint the TypeScript code:
-
-```sh
-$ yarn lint:ts
-```
-
-### Test
-
-Run the Mocha tests:
-
-```sh
-$ yarn test
-```
-
-### Coverage
-
-Generate the code coverage report:
-
-```sh
-$ yarn coverage
-```
-
-### Report Gas
-
-See the gas usage per unit test and average gas per method call:
-
-```sh
-$ REPORT_GAS=true yarn test
-```
-
-### Clean
-
-Delete the smart contract artifacts, the coverage reports and the Hardhat cache:
-
-```sh
-$ yarn clean
-```
-
-### Deploy
-
-Deploy the contracts to Hardhat Network:
-
-```sh
-$ yarn deploy --greeting "Bonjour, le monde!"
-```
-
-## Syntax Highlighting
-
-If you use VSCode, you can enjoy syntax highlighting for your Solidity code via the
-[vscode-solidity](https://github.com/juanfranblanco/vscode-solidity) extension. The recommended approach to set the
-compiler version is to add the following fields to your VSCode user settings:
-
-```json
-{
-  "solidity.compileUsingRemoteVersion": "v0.8.4+commit.c7e474f2",
-  "solidity.defaultCompiler": "remote"
-}
-```
-
-Where of course `v0.8.4+commit.c7e474f2` can be replaced with any other version.
+Considering the base gas fees for the contract deployment, it might make sense to have an intermediate proxy contract that would dinamically create new nft contracts for us, rather than deploying the nft contracts directly.
